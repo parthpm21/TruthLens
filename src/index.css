@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Geist fonts — loaded from npm package woff2 files, bundled by Vite */
+@font-face {
+  font-family: 'Geist Sans';
+  src: url('../node_modules/geist/dist/fonts/geist-sans/Geist-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('../node_modules/geist/dist/fonts/geist-mono/GeistMono-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  body {
+    @apply bg-[#fafafa] text-slate-800 font-sans antialiased selection:bg-brand/20 selection:text-slate-900;
+    background-image: 
+      radial-gradient(circle at 85% 15%, rgba(28, 167, 196, 0.06) 0%, transparent 55%),
+      radial-gradient(circle at 15% 85%, rgba(16, 185, 129, 0.04) 0%, transparent 55%),
+      linear-gradient(rgba(0, 0, 0, 0.012) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.012) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 24px 24px, 24px 24px;
+    background-attachment: fixed;
+  }
+}
+
+/* Custom Telemetry Utility Styles */
+.bg-scan-grid {
+  background-image: 
+    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+@keyframes scan {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(128px); }
+  100% { transform: translateY(0); }
+}
+
+.animate-scan-line {
+  animation: scan 2.5s ease-in-out infinite;
+}
+
+@keyframes fake-progress {
+  0% { width: 0%; }
+  30% { width: 45%; }
+  60% { width: 70%; }
+  90% { width: 95%; }
+  100% { width: 100%; }
+}
+
+.animate-progress-bar {
+  animation: fake-progress 3.5s ease-out infinite;
+}
+
+/* Custom Scrollbar for Dense Telemetry Lists */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Vertical Text for Collapsed State */
+.vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+/* Intro Laser Sweep Keyframes */
+@keyframes laser-sweep {
+  0% { left: -10%; }
+  50% { left: 110%; }
+  100% { left: -10%; }
+}
+
+.animate-laser-sweep {
+  animation: laser-sweep 2.5s ease-in-out infinite;
+}
+
+/* Dashboard Entrance Animation */
+@keyframes fade-slide-up {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-slide-up {
+  animation: fade-slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
