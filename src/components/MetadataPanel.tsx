@@ -1,5 +1,5 @@
 import React from "react";
-import { Database, CheckCircle, Warning, Info, Clock } from "@phosphor-icons/react";
+import { Database, CheckCircle, Warning, Info, Clock, Fingerprint, CaretRight } from "@phosphor-icons/react";
 
 interface MetadataPanelProps {
   metadata: {
@@ -8,9 +8,10 @@ interface MetadataPanelProps {
     notes: string[];
   };
   analyzedAt: string;
+  onOpenDeepExif?: () => void;
 }
 
-export const MetadataPanel: React.FC<MetadataPanelProps> = ({ metadata, analyzedAt }) => {
+export const MetadataPanel: React.FC<MetadataPanelProps> = ({ metadata, analyzedAt, onOpenDeepExif }) => {
   return (
     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col shadow-sm">
       {/* Header */}
@@ -68,6 +69,20 @@ export const MetadataPanel: React.FC<MetadataPanelProps> = ({ metadata, analyzed
           </div>
         </div>
 
+        {/* Deep EXIF Inspector Banner Button */}
+        {onOpenDeepExif && (
+          <button
+            onClick={onOpenDeepExif}
+            className="w-full p-2.5 rounded-xl bg-brand/5 hover:bg-brand/10 border border-brand/20 text-brand flex items-center justify-between text-xs font-bold font-sans transition-colors group"
+          >
+            <div className="flex items-center gap-2">
+              <Fingerprint className="w-4 h-4 text-brand" weight="duotone" />
+              <span>Inspect Full Sensor & PRNU Data</span>
+            </div>
+            <CaretRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" weight="bold" />
+          </button>
+        )}
+
         {/* Notes */}
         <div className="flex flex-col gap-2 min-h-0">
           <div className="flex items-center gap-1.5 mb-0.5">
@@ -84,7 +99,7 @@ export const MetadataPanel: React.FC<MetadataPanelProps> = ({ metadata, analyzed
           </div>
         </div>
 
-        {/* Timestamp — label in Geist Sans, value in Geist Mono */}
+        {/* Timestamp */}
         <div className="flex items-center justify-between pt-1 border-t border-slate-100">
           <div className="flex items-center gap-1.5 text-slate-450">
             <Clock className="w-3.5 h-3.5 text-slate-400" weight="regular" />

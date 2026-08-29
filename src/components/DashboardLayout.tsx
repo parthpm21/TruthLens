@@ -23,7 +23,7 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-type ActiveNav = "image" | "video" | "history" | "reports" | "bulk" | "none";
+type ActiveNav = "image" | "video" | "audio" | "url" | "history" | "reports" | "bulk" | "none";
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -36,7 +36,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(false);
   const [isDocsOpen, setIsDocsOpen] = useState(false);
 
-  const { resetCurrentResult, currentResult, scanHistory } = useAnalysisStore();
+  const { resetCurrentResult, currentResult, scanHistory, setUploadTab } = useAnalysisStore();
 
   useEffect(() => {
     const updateTime = () => {
@@ -51,14 +51,26 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   // Sync activeNav with currentResult mediaType if present
   useEffect(() => {
     if (currentResult) {
-      setActiveNav(currentResult.mediaType === "video" ? "video" : "image");
+      if (currentResult.mediaType === "audio") setActiveNav("audio");
+      else if (currentResult.mediaType === "video") setActiveNav("video");
+      else setActiveNav("image");
     }
   }, [currentResult]);
 
   const handleNavClick = (id: ActiveNav) => {
     setActiveNav(id);
-    if (id === "image" || id === "video") {
+    if (id === "image") {
       resetCurrentResult();
+      setUploadTab("file");
+    } else if (id === "video") {
+      resetCurrentResult();
+      setUploadTab("file");
+    } else if (id === "audio") {
+      resetCurrentResult();
+      setUploadTab("audio");
+    } else if (id === "url") {
+      resetCurrentResult();
+      setUploadTab("url");
     } else if (id === "history") {
       setIsSidebarOpen((prev) => !prev);
     } else if (id === "reports") {
@@ -82,8 +94,20 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       tooltip: "Temporal Video Stream Forensics",
     },
     {
+      id: "audio" as ActiveNav,
+      label: "Voice Scan",
+      icon: Pulse,
+      tooltip: "Audio Deepfake & Voice Clone Forensics",
+    },
+    {
+      id: "url" as ActiveNav,
+      label: "URL Stream",
+      icon: Scan,
+      tooltip: "Live Web & Social Media Ingestion",
+    },
+    {
       id: "history" as ActiveNav,
-      label: "Scan Records",
+      label: "Records",
       icon: ClockCounterClockwise,
       badge: scanHistory.length > 0 ? scanHistory.length : undefined,
       tooltip: "Scan History & Audit Logs",

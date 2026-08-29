@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useAnalysisStore } from "../store/useAnalysisStore";
-import { TerminalWindow, Cpu, Stack, Eye, Brain, MagnifyingGlass } from "@phosphor-icons/react";
+import { TerminalWindow, Cpu, Stack, Eye, Brain, MagnifyingGlass, SpeakerHigh, Waveform } from "@phosphor-icons/react";
 
-const STAGES = [
+const IMAGE_STAGES = [
   { icon: MagnifyingGlass, label: "Extracting features..." },
   { icon: Cpu,          label: "Running localization..." },
   { icon: Stack,        label: "Building heatmaps..." },
@@ -10,12 +10,34 @@ const STAGES = [
   { icon: Brain,        label: "Synthesizing report..." },
 ];
 
+const AUDIO_STAGES = [
+  { icon: Waveform,        label: "Decomposing signal..." },
+  { icon: SpeakerHigh,     label: "Generating spectrogram..." },
+  { icon: Cpu,             label: "Pitch & jitter analysis..." },
+  { icon: Eye,             label: "Vocoder classifier..." },
+  { icon: Brain,           label: "Synthesizing report..." },
+];
+
 export const AnalyzingView: React.FC = () => {
   const { analysisProgressText, selectedFile, selectedFilePreview } = useAnalysisStore();
   const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
   const [activeStageIdx, setActiveStageIdx] = useState(0);
 
-  const logsPool = [
+  const isAudio = selectedFile?.type.startsWith("audio/") || selectedFile?.name.match(/\.(mp3|wav|m4a|ogg|flac)$/i) || analysisProgressText.toLowerCase().includes("vocal") || analysisProgressText.toLowerCase().includes("spectrogram");
+
+  const stages = isAudio ? AUDIO_STAGES : IMAGE_STAGES;
+
+  const logsPool = isAudio ? [
+    "AUDIO_INTEGRITY › Checking bit-depth and PCM header",
+    "RESAMPLE › Aligning to 48kHz reference rate",
+    "STFT_PASS › Fast Fourier Transform window initialized",
+    "SPECTROGRAM › Computing frequency energy distribution",
+    "GLOTTAL_PULSE › Extracting pitch period perturbation (Jitter)",
+    "AMPLITUDE › Measuring Shimmer variance across frames",
+    "SYNTH_CHECK › Comparing against ElevenLabs / Bark / RVC embeddings",
+    "HNR_CALC › Computing Harmonics-to-Noise ratio",
+    "FUSION › Collating voice biometric arrays…",
+  ] : [
     "INTEGRITY_CHECK › MD5/SHA256 checksum scan initialized",
     "FORMAT_PARSER › Loading metadata ring buffers",
     "EXIF_READER › Header consistency OK",
@@ -38,18 +60,18 @@ export const AnalyzingView: React.FC = () => {
         setTerminalLogs((prev) => [...prev, logsPool[logIndex]].slice(-7));
         logIndex++;
       }
-    }, 420);
+    }, 380);
 
     const stageInterval = setInterval(() => {
-      stageIndex = (stageIndex + 1) % STAGES.length;
+      stageIndex = (stageIndex + 1) % stages.length;
       setActiveStageIdx(stageIndex);
-    }, 800);
+    }, 700);
 
     return () => {
       clearInterval(logInterval);
       clearInterval(stageInterval);
     };
-  }, []);
+  }, [isAudio]);
 
   const isVideo = selectedFile?.type.startsWith("video/");
 
@@ -62,14 +84,32 @@ export const AnalyzingView: React.FC = () => {
         <div className="p-8 flex flex-col items-center gap-8">
 
           {/* Media target thumbnail with scan overlay */}
-          <div className="relative w-56 h-32 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm">
-            {selectedFilePreview && (
+          <div className="relative w-56 h-32 rounded-xl overflow-hidden border border-slate-200 bg-slate-900 shadow-sm flex items-center justify-center">
+            {isAudio ? (
+              <div className="flex flex-col items-center gap-2 text-white">
+                <div className="w-10 h-10 rounded-xl bg-brand/20 border border-brand flex items-center justify-center text-brand animate-pulse">
+                  <SpeakerHigh className="w-5 h-5" weight="duotone" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-1 h-4 bg-brand animate-pulse" />
+                  <div className="w-1 h-7 bg-brand animate-pulse delay-75" />
+                  <div className="w-1 h-3 bg-brand animate-pulse delay-150" />
+                  <div className="w-1 h-6 bg-brand animate-pulse delay-100" />
+                  <div className="w-1 h-2 bg-brand animate-pulse" />
+                </div>
+              </div>
+            ) : selectedFilePreview ? (
               isVideo ? (
                 <video src={selectedFilePreview} className="w-full h-full object-cover opacity-60" muted />
               ) : (
                 <img src={selectedFilePreview} alt="target" className="w-full h-full object-cover opacity-60" />
               )
+            ) : (
+              <div className="text-center p-3 text-slate-400 font-mono text-[10px]">
+                Target Stream Buffer
+              </div>
             )}
+
             {/* Scan grid overlay */}
             <div className="absolute inset-0 bg-scan-grid opacity-20 pointer-events-none" />
             {/* Moving scan line */}
@@ -81,14 +121,16 @@ export const AnalyzingView: React.FC = () => {
             <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-brand" />
             {/* Center label */}
             <div className="absolute inset-0 flex items-end justify-start p-2">
-              <span className="font-sans text-[9px] text-brand font-bold uppercase tracking-wider">Scanning buffer...</span>
+              <span className="font-sans text-[9px] text-brand font-bold uppercase tracking-wider">
+                {isAudio ? "Decomposing Audio..." : "Scanning buffer..."}
+              </span>
             </div>
           </div>
 
           {/* Stage indicators */}
           <div className="w-full flex flex-col items-center gap-4">
             <div className="flex items-center gap-2 flex-wrap justify-center">
-              {STAGES.map((stage, i) => {
+              {stages.map((stage, i) => {
                 const Icon = stage.icon;
                 const isActive = i === activeStageIdx;
                 const isDone = i < activeStageIdx;
@@ -114,7 +156,7 @@ export const AnalyzingView: React.FC = () => {
             {/* Primary progress text */}
             <div className="text-center">
               <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand font-bold mb-1">
-                Pipeline Running
+                Forensic Pipeline Running
               </p>
               <h3 className="text-base font-bold text-slate-800">{analysisProgressText}</h3>
               {selectedFile && (

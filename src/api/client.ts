@@ -8,31 +8,62 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Analyzes the uploaded media file.
- * Returns a randomized relevant fixture depending on whether the media is an image or video,
- * after a simulated 2-4 second network delay.
+ * Returns a randomized relevant fixture depending on whether the media is an image, video, or audio,
+ * after a simulated 2-3 second network delay.
  */
 export async function analyzeMedia(file: File): Promise<AnalysisResult> {
-  // Simulate 2 to 4 seconds delay
-  const waitTime = Math.random() * 2000 + 2000;
+  // Simulate 2 to 3 seconds delay
+  const waitTime = Math.random() * 1500 + 2000;
   await delay(waitTime);
 
-  const isVideo = file.type.startsWith("video/") || file.name.endsWith(".mp4") || file.name.endsWith(".mov");
+  const isAudio = file.type.startsWith("audio/") || file.name.match(/\.(mp3|wav|m4a|ogg|flac|aac)$/i);
+  const isVideo = file.type.startsWith("video/") || file.name.match(/\.(mp4|mov|webm|avi)$/i);
   
+  const targetType = isAudio ? "audio" : isVideo ? "video" : "image";
+
   // Filter fixtures by type to match the upload file's category
-  const candidates = mockFixtures.filter((f) => f.mediaType === (isVideo ? "video" : "image"));
+  const candidates = mockFixtures.filter((f) => f.mediaType === targetType);
   
-  if (candidates.length === 0) {
-    // Fallback if none matches
-    return mockFixtures[0];
-  }
+  const selectedFixture = candidates.length > 0
+    ? candidates[Math.floor(Math.random() * candidates.length)]
+    : mockFixtures[0];
   
-  // Return a random candidate
-  const randomIndex = Math.floor(Math.random() * candidates.length);
-  const selectedFixture = candidates[randomIndex];
-  
-  // Return a shallow copy with a fresh timestamp
+  // Return a shallow copy with a fresh timestamp and custom title
   return {
     ...selectedFixture,
+    title: file.name,
+    analyzedAt: new Date().toISOString()
+  };
+}
+
+/**
+ * Analyzes media streamed / ingested from a public web URL.
+ */
+export async function analyzeUrl(url: string, preferredMediaType?: "image" | "video" | "audio"): Promise<AnalysisResult> {
+  // Simulate 2.5s network extraction & analysis delay
+  await delay(2500);
+
+  let targetType: "image" | "video" | "audio" = preferredMediaType || "video";
+
+  if (!preferredMediaType) {
+    if (url.match(/\.(mp3|wav|m4a|ogg|flac|podcast)/i) || url.includes("voice") || url.includes("audio")) {
+      targetType = "audio";
+    } else if (url.match(/\.(jpg|jpeg|png|webp|avif)/i) || url.includes("photo") || url.includes("image")) {
+      targetType = "image";
+    } else {
+      targetType = "video";
+    }
+  }
+
+  const candidates = mockFixtures.filter((f) => f.mediaType === targetType);
+  const selectedFixture = candidates.length > 0
+    ? candidates[Math.floor(Math.random() * candidates.length)]
+    : mockFixtures[0];
+
+  return {
+    ...selectedFixture,
+    sourceUrl: url,
+    title: `Web Stream: ${url.replace(/^https?:\/\/(www\.)?/, "").slice(0, 32)}...`,
     analyzedAt: new Date().toISOString()
   };
 }
