@@ -36,3 +36,20 @@ try:
     ])
 except ImportError:
     pass
+
+try:
+    from .video_preprocessor import (
+        VideoPreprocessor,
+        ProcessedVideo,
+        VideoFrameMetadata,
+        SamplingStrategy,
+    )
+    __all__.extend([
+        "VideoPreprocessor",
+        "ProcessedVideo",
+        "VideoFrameMetadata",
+        "SamplingStrategy",
+    ])
+except ImportError:
+    pass
+
