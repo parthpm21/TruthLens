@@ -7,7 +7,6 @@ import {
   ShieldWarning,
   CaretRight,
   Globe,
-  SpeakerHigh,
   Image as ImageIcon,
   FilmStrip,
   Sparkle,
@@ -33,7 +32,6 @@ export const UploadView: React.FC = () => {
   const [isDragActive, setIsDragActive] = useState(false);
   const [urlInput, setUrlInput] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const audioInputRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -59,12 +57,11 @@ export const UploadView: React.FC = () => {
   const validateAndSetFile = (file: File) => {
     const isImage = file.type.startsWith("image/") || file.name.match(/\.(jpg|jpeg|png|webp)$/i);
     const isVideo = file.type.startsWith("video/") || file.name.match(/\.(mp4|mov|webm)$/i);
-    const isAudio = file.type.startsWith("audio/") || file.name.match(/\.(mp3|wav|m4a|ogg|flac)$/i);
 
-    if (isImage || isVideo || isAudio) {
+    if (isImage || isVideo) {
       setFile(file);
     } else {
-      alert("Unsupported format. Upload JPEG/PNG image, MP4/MOV video, or MP3/WAV audio.");
+      alert("Unsupported format. Upload JPEG/PNG image or MP4/MOV video.");
     }
   };
 
@@ -77,11 +74,7 @@ export const UploadView: React.FC = () => {
   };
 
   const onButtonClick = () => {
-    if (uploadTab === "audio") {
-      audioInputRef.current?.click();
-    } else {
-      fileInputRef.current?.click();
-    }
+    fileInputRef.current?.click();
   };
 
   const handleUrlSubmit = (e: React.FormEvent) => {
@@ -92,13 +85,12 @@ export const UploadView: React.FC = () => {
   };
 
   const isVideo = selectedFile?.type.startsWith("video/") || false;
-  const isAudio = selectedFile?.type.startsWith("audio/") || selectedFile?.name.match(/\.(mp3|wav|m4a|ogg|flac)$/i);
 
   const sampleUrls = [
     { label: "Viral Politician FaceSwap Clip", url: "https://truthlens.ai/samples/press-briefing-falsified.mp4", type: "video" as const },
-    { label: "ElevenLabs Executive Voice Clone", url: "https://truthlens.ai/samples/executive-voice-clone.mp3", type: "audio" as const },
     { label: "Spliced Accounting Document", url: "https://truthlens.ai/samples/invoice-audit-scan.jpg", type: "image" as const },
-    { label: "Authentic Podcast Interview", url: "https://truthlens.ai/samples/podcast-authentic.wav", type: "audio" as const },
+    { label: "Authentic Crowd Gathering 4K", url: "https://truthlens.ai/samples/authentic-crowd-event.jpg", type: "image" as const },
+    { label: "Surveillance Drone Reconnaissance", url: "https://truthlens.ai/samples/drone-surveillance-stream.mov", type: "video" as const },
   ];
 
   return (
@@ -110,7 +102,7 @@ export const UploadView: React.FC = () => {
           The Most <span className="text-brand">Explainable</span> Deepfake Detector!
         </h2>
         <p className="text-slate-500 text-sm mt-2 font-sans max-w-lg mx-auto">
-          Scan images, videos, audio voice clips, or public web streams with millisecond neural verification.
+          Scan images, videos, or public web streams with millisecond neural verification and explainable heatmaps.
         </p>
       </div>
 
@@ -126,18 +118,6 @@ export const UploadView: React.FC = () => {
         >
           <ImageIcon className="w-4 h-4" weight="duotone" />
           <span>Image / Video</span>
-        </button>
-
-        <button
-          onClick={() => { setUploadTab("audio"); clearFile(); }}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold font-sans transition-all duration-150 ${
-            uploadTab === "audio"
-              ? "bg-white text-brand shadow-xs"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <SpeakerHigh className="w-4 h-4" weight="duotone" />
-          <span>Audio & Voice</span>
         </button>
 
         <button
@@ -178,8 +158,8 @@ export const UploadView: React.FC = () => {
         {/* Left Panel: Dynamic Ingestion Container */}
         <div className="md:col-span-7 flex flex-col">
           
-          {/* TAB 1 & 2: File or Audio Upload */}
-          {(uploadTab === "file" || uploadTab === "audio") && (
+          {/* TAB 1: File Upload */}
+          {uploadTab === "file" && (
             !selectedFile ? (
               <div
                 onDragEnter={handleDrag}
@@ -200,56 +180,31 @@ export const UploadView: React.FC = () => {
                   accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
                   onChange={handleChange}
                 />
-                <input
-                  ref={audioInputRef}
-                  type="file"
-                  className="hidden"
-                  accept="audio/mp3,audio/wav,audio/m4a,audio/ogg,audio/flac"
-                  onChange={handleChange}
-                />
                 
                 <div className="bg-slate-100 p-4 rounded-full mb-4 text-slate-400 group-hover:scale-105 transition-all">
-                  {uploadTab === "audio" ? (
-                    <SpeakerHigh className="w-8 h-8 text-brand" weight="duotone" />
-                  ) : (
-                    <Upload className="w-8 h-8 text-brand" weight="duotone" />
-                  )}
+                  <Upload className="w-8 h-8 text-brand" weight="duotone" />
                 </div>
                 
                 <p className="text-sm font-semibold text-slate-700 font-sans">
-                  {uploadTab === "audio"
-                    ? "Click to upload audio voice clip or drag & drop"
-                    : "Click to upload media or drag and drop"}
+                  Click to upload media or drag and drop
                 </p>
                 
                 <p className="text-xs text-slate-400 mt-2 max-w-xs mx-auto font-sans">
-                  {uploadTab === "audio"
-                    ? "Supports MP3, WAV, M4A, OGG, or FLAC up to 100MB"
-                    : "Supports high-resolution JPEGs, PNGs, MP4s, or MOVs."}
+                  Supports high-resolution JPEGs, PNGs, MP4s, or MOVs.
                 </p>
               </div>
             ) : (
               /* File Preview Mode */
               <div className="flex-1 min-h-[320px] border border-slate-200 rounded-2xl bg-white p-5 flex flex-col justify-between shadow-sm relative overflow-hidden">
                 <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-900 border border-slate-200 flex items-center justify-center">
-                  {isAudio ? (
-                    <div className="flex flex-col items-center gap-3 p-6 text-center text-white">
-                      <div className="w-12 h-12 rounded-2xl bg-brand/20 border border-brand flex items-center justify-center text-brand animate-pulse">
-                        <SpeakerHigh className="w-6 h-6" weight="duotone" />
-                      </div>
-                      <div>
-                        <span className="font-sans text-sm font-bold block">{selectedFile.name}</span>
-                        <span className="font-mono text-[10px] text-slate-400">Audio Ingestion Buffer Ready</span>
-                      </div>
-                    </div>
-                  ) : isVideo ? (
+                  {isVideo ? (
                     <video src={selectedFilePreview || ""} className="w-full h-full object-cover" muted />
                   ) : (
                     <img src={selectedFilePreview || ""} alt="uploaded preview" className="w-full h-full object-cover" />
                   )}
                   
                   <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-[10px] font-sans text-slate-700 font-semibold shadow-sm uppercase">
-                    {isAudio ? "Audio" : isVideo ? "Video" : "Image"}
+                    {isVideo ? "Video" : "Image"}
                   </div>
                 </div>
 
@@ -271,7 +226,7 @@ export const UploadView: React.FC = () => {
             )
           )}
 
-          {/* TAB 3: Live URL Scanner */}
+          {/* TAB 2: Live URL Scanner */}
           {uploadTab === "url" && (
             <div className="flex-1 min-h-[320px] border border-slate-200 rounded-2xl bg-white p-6 flex flex-col justify-between shadow-sm">
               <div className="space-y-4">
@@ -333,7 +288,7 @@ export const UploadView: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 4: Instant Demo Presets */}
+          {/* TAB 3: Instant Demo Presets */}
           {uploadTab === "presets" && (
             <div className="flex-1 min-h-[320px] border border-slate-200 rounded-2xl bg-white p-5 flex flex-col justify-between shadow-sm space-y-3">
               <div>
@@ -349,9 +304,7 @@ export const UploadView: React.FC = () => {
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="p-2 rounded-lg bg-white border border-slate-200 text-brand flex-shrink-0 group-hover:scale-105 transition-transform">
-                          {fixture.mediaType === "audio" ? (
-                            <SpeakerHigh className="w-4 h-4" weight="duotone" />
-                          ) : fixture.mediaType === "video" ? (
+                          {fixture.mediaType === "video" ? (
                             <FilmStrip className="w-4 h-4" weight="duotone" />
                           ) : (
                             <ImageIcon className="w-4 h-4" weight="duotone" />
@@ -388,17 +341,10 @@ export const UploadView: React.FC = () => {
               Comprehensive Forensic Suite
             </h3>
             
-            {/* Divider line matching isgen.ai */}
             <div className="w-8 h-0.5 bg-brand" />
 
             {/* Feature bullets with colored arrow icons */}
             <ul className="space-y-3.5 pt-2 text-xs text-slate-650 leading-relaxed font-sans font-medium">
-              <li className="flex items-start gap-2.5">
-                <CaretRight className="w-4 h-4 text-brand flex-shrink-0 mt-0.5" weight="bold" />
-                <span>
-                  <strong>Audio Deepfake & Voice Clones:</strong> Spectrogram analysis & vocal biomechanics.
-                </span>
-              </li>
               <li className="flex items-start gap-2.5">
                 <CaretRight className="w-4 h-4 text-brand flex-shrink-0 mt-0.5" weight="bold" />
                 <span>
@@ -415,6 +361,12 @@ export const UploadView: React.FC = () => {
                 <CaretRight className="w-4 h-4 text-brand flex-shrink-0 mt-0.5" weight="bold" />
                 <span>
                   <strong>Explainable Heatmaps:</strong> TruFor pixel localization & Grad-CAM cross-attention.
+                </span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CaretRight className="w-4 h-4 text-brand flex-shrink-0 mt-0.5" weight="bold" />
+                <span>
+                  <strong>Forensic PDF Dossier:</strong> Instant certificate export with cryptographic hashes.
                 </span>
               </li>
             </ul>
@@ -450,7 +402,7 @@ export const UploadView: React.FC = () => {
                 onClick={onButtonClick}
                 className="w-full py-3 px-4 bg-brand hover:bg-brand-hover text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:shadow-lg transition-all duration-200 text-center font-sans"
               >
-                {uploadTab === "audio" ? "Select Audio Clip" : "Select Media File"}
+                Select Media File
               </button>
             )}
             
@@ -466,4 +418,3 @@ export const UploadView: React.FC = () => {
     </div>
   );
 };
-

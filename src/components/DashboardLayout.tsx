@@ -23,7 +23,7 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-type ActiveNav = "image" | "video" | "audio" | "url" | "history" | "reports" | "bulk" | "none";
+type ActiveNav = "image" | "video" | "url" | "history" | "reports" | "bulk" | "none";
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -51,8 +51,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   // Sync activeNav with currentResult mediaType if present
   useEffect(() => {
     if (currentResult) {
-      if (currentResult.mediaType === "audio") setActiveNav("audio");
-      else if (currentResult.mediaType === "video") setActiveNav("video");
+      if (currentResult.mediaType === "video") setActiveNav("video");
       else setActiveNav("image");
     }
   }, [currentResult]);
@@ -65,9 +64,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     } else if (id === "video") {
       resetCurrentResult();
       setUploadTab("file");
-    } else if (id === "audio") {
-      resetCurrentResult();
-      setUploadTab("audio");
     } else if (id === "url") {
       resetCurrentResult();
       setUploadTab("url");
@@ -92,12 +88,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       label: "Video Scan",
       icon: FilmStrip,
       tooltip: "Temporal Video Stream Forensics",
-    },
-    {
-      id: "audio" as ActiveNav,
-      label: "Voice Scan",
-      icon: Pulse,
-      tooltip: "Audio Deepfake & Voice Clone Forensics",
     },
     {
       id: "url" as ActiveNav,
