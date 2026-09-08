@@ -6,8 +6,6 @@ const IMAGES = {
   invoice: "https://images.unsplash.com/photo-1450133064473-71024230f91b?w=800&auto=format&fit=crop&q=80",
   crowd: "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=800&auto=format&fit=crop&q=80",
   drone: "https://images.unsplash.com/photo-1508873535684-277a3cbcc4e8?w=800&auto=format&fit=crop&q=80",
-  podcast: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=800&auto=format&fit=crop&q=80",
-  voiceActor: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=800&auto=format&fit=crop&q=80",
 };
 
 // SVG Overlays as inline Data URLs to represent heatmaps
@@ -34,11 +32,6 @@ const DRONE_LOCALIZATION = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.or
 const DRONE_CONFIDENCE = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><circle cx="300" cy="400" r="170" fill="none" stroke="%23ffb300" stroke-width="2" stroke-dasharray="5,5"/></svg>`;
 const DRONE_GRADCAM = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><defs><radialGradient id="gc4" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="%23ffb300" stop-opacity="0.6"/><stop offset="50%" stop-color="%2300ff00" stop-opacity="0.3"/><stop offset="100%" stop-color="%230000ff" stop-opacity="0"/></radialGradient></defs><circle cx="300" cy="400" r="280" fill="url(%23gc4)"/></svg>`;
 const DRONE_ELA = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><rect width="800" height="600" fill="%230e131f"/><circle cx="300" cy="400" r="150" fill="%23f59e0b" fill-opacity="0.4"/></svg>`;
-
-// 5. Audio Spectrogram SVGs
-const SYNTHETIC_AUDIO_SPECTROGRAM = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 300"><defs><linearGradient id="spec1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="%230f172a"/><stop offset="25%" stop-color="%230284c7"/><stop offset="50%" stop-color="%2310b981"/><stop offset="75%" stop-color="%23f59e0b"/><stop offset="100%" stop-color="%23ef4444"/></linearGradient></defs><rect width="1000" height="300" fill="url(%23spec1)"/><rect x="350" y="30" width="320" height="240" fill="%23ef4444" fill-opacity="0.35" stroke="%23ef4444" stroke-width="2" stroke-dasharray="6,4"/><text x="365" y="60" fill="%23ffffff" font-family="monospace" font-size="12" font-weight="bold">SYNTHETIC ARTIFACT (20kHz CUTOFF / VOCODER GLITCH)</text></svg>`;
-
-const AUTHENTIC_AUDIO_SPECTROGRAM = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 300"><defs><linearGradient id="spec2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="%230b1329"/><stop offset="30%" stop-color="%230369a1"/><stop offset="65%" stop-color="%23059669"/><stop offset="90%" stop-color="%2310b981"/><stop offset="100%" stop-color="%236ee7b7"/></linearGradient></defs><rect width="1000" height="300" fill="url(%23spec2)"/><text x="30" y="45" fill="%23ffffff" font-family="monospace" font-size="12">NATURAL VOCAL RESONANCE · HARMONICS NOMINAL</text></svg>`;
 
 export const mockFixtures: AnalysisResult[] = [
   {
@@ -103,51 +96,6 @@ export const mockFixtures: AnalysisResult[] = [
     analyzedAt: new Date(Date.now() - 3600000 * 2).toISOString() // 2 hours ago
   },
   {
-    mediaType: "audio",
-    title: "Executive Voice Clone Leak (ElevenLabs v2)",
-    sourceUrl: "https://truthlens.ai/samples/executive-voice-clone.mp3",
-    verdict: "manipulated",
-    trustScore: 8,
-    classifierConfidence: 97.8,
-    localizationMap: { overlayImageUrl: SYNTHETIC_AUDIO_SPECTROGRAM, confidence: 96.2 },
-    confidenceMap: { overlayImageUrl: SYNTHETIC_AUDIO_SPECTROGRAM },
-    gradCamHeatmap: { overlayImageUrl: SYNTHETIC_AUDIO_SPECTROGRAM },
-    metadata: {
-      exifPresent: true,
-      compressionArtifactsDetected: true,
-      notes: [
-        "Unnatural phase continuity detected across formant transitions (vocoder signature).",
-        "Abrupt high-frequency spectral brick-wall cutoff at 20.2 kHz characteristic of ElevenLabs neural synthesis.",
-        "Atypical vocal tract micro-tremor variance; lack of biological thoracic respiration cycles.",
-        "Harmonics-to-noise ratio is abnormally uniform with missing glottal pulse flutter."
-      ]
-    },
-    audioForensics: {
-      durationSeconds: 14.5,
-      sampleRate: "44.1 kHz (16-bit PCM)",
-      bitrate: "320 kbps (CBR)",
-      synthesizerModel: "ElevenLabs Multilingual v2 / RVC v2",
-      synthesizerConfidence: 98.6,
-      vocalJitterPercent: 0.04, // extremely low, unnatural
-      shimmerPercent: 0.12,
-      harmonicsToNoiseRatioDb: 34.8,
-      breathArtifactsDetected: false,
-      spectralCutoffFrequencyKhz: 20.2,
-      waveformPoints: [
-        0.1, 0.4, 0.7, 0.3, 0.8, 0.9, 0.4, 0.6, 0.85, 0.95, 
-        0.3, 0.75, 0.88, 0.65, 0.9, 0.8, 0.2, 0.5, 0.7, 0.4,
-        0.85, 0.92, 0.6, 0.3, 0.75, 0.88, 0.45, 0.65, 0.3, 0.15
-      ],
-      spectrogramUrl: SYNTHETIC_AUDIO_SPECTROGRAM,
-      syntheticSegments: [
-        { startTime: 3.2, endTime: 8.9, confidence: 98.4, anomalyType: "Neural Vocoder Glitch & Respiration Absence" },
-        { startTime: 10.1, endTime: 13.6, confidence: 96.1, anomalyType: "Formant Fusing Artifact" }
-      ]
-    },
-    reportDownloadUrl: "/reports/rep-voice-clone-0822.pdf",
-    analyzedAt: new Date(Date.now() - 3600000 * 5).toISOString()
-  },
-  {
     mediaType: "image",
     title: "Tampered Financial Invoice",
     sourceUrl: "https://truthlens.ai/samples/invoice-audit-scan.jpg",
@@ -192,47 +140,6 @@ export const mockFixtures: AnalysisResult[] = [
     },
     reportDownloadUrl: "/reports/rep-invoice-0822.pdf",
     analyzedAt: new Date(Date.now() - 3600000 * 24).toISOString() // 1 day ago
-  },
-  {
-    mediaType: "audio",
-    title: "Studio Podcast Interview Recording",
-    sourceUrl: "https://truthlens.ai/samples/podcast-authentic.wav",
-    verdict: "authentic",
-    trustScore: 95,
-    classifierConfidence: 98.1,
-    localizationMap: { overlayImageUrl: AUTHENTIC_AUDIO_SPECTROGRAM, confidence: 1.8 },
-    confidenceMap: { overlayImageUrl: AUTHENTIC_AUDIO_SPECTROGRAM },
-    gradCamHeatmap: { overlayImageUrl: AUTHENTIC_AUDIO_SPECTROGRAM },
-    metadata: {
-      exifPresent: true,
-      compressionArtifactsDetected: false,
-      notes: [
-        "Natural vocal tract biomechanics: dynamic pitch jitter (0.82%) and natural shimmer (2.4%).",
-        "Consistent room acoustic reverberation with unperturbed room noise floor (-52 dB).",
-        "Biological inhalation and exhalation pause markers verified with zero neural splice artifacts."
-      ]
-    },
-    audioForensics: {
-      durationSeconds: 22.0,
-      sampleRate: "48.0 kHz (24-bit Broadcast Wave)",
-      bitrate: "1536 kbps (Uncompressed LPCM)",
-      synthesizerModel: "Authentic Human Vocal Tract (Shure SM7B)",
-      synthesizerConfidence: 1.2,
-      vocalJitterPercent: 0.82,
-      shimmerPercent: 2.41,
-      harmonicsToNoiseRatioDb: 22.4,
-      breathArtifactsDetected: true,
-      spectralCutoffFrequencyKhz: 24.0,
-      waveformPoints: [
-        0.05, 0.2, 0.5, 0.35, 0.6, 0.75, 0.3, 0.45, 0.6, 0.8,
-        0.2, 0.55, 0.7, 0.4, 0.65, 0.5, 0.1, 0.35, 0.5, 0.3,
-        0.65, 0.78, 0.4, 0.2, 0.55, 0.68, 0.35, 0.45, 0.2, 0.05
-      ],
-      spectrogramUrl: AUTHENTIC_AUDIO_SPECTROGRAM,
-      syntheticSegments: []
-    },
-    reportDownloadUrl: "/reports/rep-podcast-0822.pdf",
-    analyzedAt: new Date(Date.now() - 3600000 * 36).toISOString()
   },
   {
     mediaType: "image",
@@ -348,10 +255,6 @@ export const mockFixtures: AnalysisResult[] = [
 ];
 
 export const getBaseImageForResult = (result: AnalysisResult): string => {
-  if (result.mediaType === "audio") {
-    if (result.trustScore < 50) return IMAGES.voiceActor;
-    return IMAGES.podcast;
-  }
   if (result.mediaType === "video") {
     if (result.trustScore < 20) return IMAGES.politician;
     return IMAGES.drone;

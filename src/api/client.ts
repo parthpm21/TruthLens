@@ -8,7 +8,7 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Analyzes the uploaded media file.
- * Returns a randomized relevant fixture depending on whether the media is an image, video, or audio,
+ * Returns a randomized relevant fixture depending on whether the media is an image or video,
  * after a simulated 2-3 second network delay.
  */
 export async function analyzeMedia(file: File): Promise<AnalysisResult> {
@@ -16,10 +16,8 @@ export async function analyzeMedia(file: File): Promise<AnalysisResult> {
   const waitTime = Math.random() * 1500 + 2000;
   await delay(waitTime);
 
-  const isAudio = file.type.startsWith("audio/") || file.name.match(/\.(mp3|wav|m4a|ogg|flac|aac)$/i);
   const isVideo = file.type.startsWith("video/") || file.name.match(/\.(mp4|mov|webm|avi)$/i);
-  
-  const targetType = isAudio ? "audio" : isVideo ? "video" : "image";
+  const targetType = isVideo ? "video" : "image";
 
   // Filter fixtures by type to match the upload file's category
   const candidates = mockFixtures.filter((f) => f.mediaType === targetType);
@@ -39,16 +37,14 @@ export async function analyzeMedia(file: File): Promise<AnalysisResult> {
 /**
  * Analyzes media streamed / ingested from a public web URL.
  */
-export async function analyzeUrl(url: string, preferredMediaType?: "image" | "video" | "audio"): Promise<AnalysisResult> {
+export async function analyzeUrl(url: string, preferredMediaType?: "image" | "video"): Promise<AnalysisResult> {
   // Simulate 2.5s network extraction & analysis delay
   await delay(2500);
 
-  let targetType: "image" | "video" | "audio" = preferredMediaType || "video";
+  let targetType: "image" | "video" = preferredMediaType || "video";
 
   if (!preferredMediaType) {
-    if (url.match(/\.(mp3|wav|m4a|ogg|flac|podcast)/i) || url.includes("voice") || url.includes("audio")) {
-      targetType = "audio";
-    } else if (url.match(/\.(jpg|jpeg|png|webp|avif)/i) || url.includes("photo") || url.includes("image")) {
+    if (url.match(/\.(jpg|jpeg|png|webp|avif)/i) || url.includes("photo") || url.includes("image")) {
       targetType = "image";
     } else {
       targetType = "video";
