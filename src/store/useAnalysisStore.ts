@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { AnalysisResult } from "../types/analysis";
 import { analyzeMedia, analyzeUrl, getScanHistory, downloadReport } from "../api/client";
 
-export type UploadTab = "file" | "audio" | "url" | "presets";
+export type UploadTab = "file" | "url" | "presets";
 
 interface AnalysisState {
   scanHistory: AnalysisResult[];
@@ -17,10 +17,6 @@ interface AnalysisState {
   isLoadingHistory: boolean;
   error: string | null;
 
-  // Audio Playback state
-  isPlayingAudio: boolean;
-  audioCurrentTime: number;
-
   // Modals state
   isDeepExifOpen: boolean;
 
@@ -29,7 +25,7 @@ interface AnalysisState {
   setFile: (file: File) => void;
   clearFile: () => void;
   uploadAndAnalyze: () => Promise<void>;
-  analyzeUrlStream: (url: string, preferredMediaType?: "image" | "video" | "audio") => Promise<void>;
+  analyzeUrlStream: (url: string, preferredMediaType?: "image" | "video") => Promise<void>;
   analyzePreset: (preset: AnalysisResult) => Promise<void>;
   fetchScanHistory: () => Promise<void>;
   selectResult: (result: AnalysisResult) => void;
@@ -38,11 +34,6 @@ interface AnalysisState {
   setSelectedOverlayMode: (mode: "original" | "localization" | "confidence" | "gradcam") => void;
   setActiveFrameIndex: (index: number) => void;
   setIsDeepExifOpen: (open: boolean) => void;
-  
-  // Audio playback actions
-  setIsPlayingAudio: (playing: boolean) => void;
-  setAudioCurrentTime: (time: number) => void;
-  toggleAudioPlayback: () => void;
 }
 
 export const useAnalysisStore = create<AnalysisState>((set, get) => ({
@@ -57,8 +48,6 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   activeFrameIndex: 0,
   isLoadingHistory: false,
   error: null,
-  isPlayingAudio: false,
-  audioCurrentTime: 0,
   isDeepExifOpen: false,
 
   setUploadTab: (tab: UploadTab) => {
@@ -67,18 +56,6 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
 
   setIsDeepExifOpen: (open: boolean) => {
     set({ isDeepExifOpen: open });
-  },
-
-  setIsPlayingAudio: (playing: boolean) => {
-    set({ isPlayingAudio: playing });
-  },
-
-  setAudioCurrentTime: (time: number) => {
-    set({ audioCurrentTime: time });
-  },
-
-  toggleAudioPlayback: () => {
-    set((state) => ({ isPlayingAudio: !state.isPlayingAudio }));
   },
 
   setFile: (file: File) => {
@@ -112,19 +89,10 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
     const file = get().selectedFile;
     if (!file) return;
 
-    const isAudio = file.type.startsWith("audio/") || file.name.match(/\.(mp3|wav|m4a|ogg|flac|aac)$/i);
-    const initialText = isAudio ? "Extracting vocal spectrogram..." : "Extracting features...";
-
-    set({ isAnalyzing: true, error: null, analysisProgressText: initialText });
+    set({ isAnalyzing: true, error: null, analysisProgressText: "Extracting features..." });
 
     // Progress text cycling intervals
-    const progressTexts = isAudio ? [
-      "Decomposing audio channels...",
-      "Generating Fourier spectrogram...",
-      "Analyzing glottal pulses & jitter...",
-      "Scanning for neural vocoder markers...",
-      "Finalizing voice clone report..."
-    ] : [
+    const progressTexts = [
       "Extracting features...",
       "Running localization...",
       "Generating explanation...",
@@ -153,9 +121,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
         selectedFile: null,
         selectedFilePreview: null,
         selectedOverlayMode: "original",
-        activeFrameIndex: 0,
-        isPlayingAudio: false,
-        audioCurrentTime: 0
+        activeFrameIndex: 0
       });
     } catch (err: any) {
       clearInterval(intervalId);
@@ -166,7 +132,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
     }
   },
 
-  analyzeUrlStream: async (url: string, preferredMediaType?: "image" | "video" | "audio") => {
+  analyzeUrlStream: async (url: string, preferredMediaType?: "image" | "video") => {
     if (!url || !url.trim()) {
       set({ error: "Please enter a valid media stream URL." });
       return;
@@ -204,9 +170,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
         selectedFile: null,
         selectedFilePreview: null,
         selectedOverlayMode: "original",
-        activeFrameIndex: 0,
-        isPlayingAudio: false,
-        audioCurrentTime: 0
+        activeFrameIndex: 0
       });
     } catch (err: any) {
       clearInterval(intervalId);
@@ -218,11 +182,10 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   },
 
   analyzePreset: async (preset: AnalysisResult) => {
-    const isAudio = preset.mediaType === "audio";
     set({ 
       isAnalyzing: true, 
       error: null, 
-      analysisProgressText: isAudio ? "Loading vocal biometrics..." : "Loading sample telemetry..." 
+      analysisProgressText: "Loading sample telemetry..." 
     });
 
     const progressTexts = [
@@ -253,9 +216,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
         selectedFile: null,
         selectedFilePreview: null,
         selectedOverlayMode: "original",
-        activeFrameIndex: 0,
-        isPlayingAudio: false,
-        audioCurrentTime: 0
+        activeFrameIndex: 0
       });
     }, 1600);
   },
@@ -277,8 +238,6 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
       selectedFilePreview: null,
       selectedOverlayMode: "original",
       activeFrameIndex: 0,
-      isPlayingAudio: false,
-      audioCurrentTime: 0,
       error: null
     });
   },
@@ -310,8 +269,6 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
       currentResult: null,
       selectedOverlayMode: "original",
       activeFrameIndex: 0,
-      isPlayingAudio: false,
-      audioCurrentTime: 0,
       error: null
     });
   },
