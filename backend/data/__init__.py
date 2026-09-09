@@ -53,3 +53,24 @@ try:
 except ImportError:
     pass
 
+try:
+    from .validator import (
+        PreprocessingValidator,
+        ValidationResult,
+        ValidationIssue,
+        ValidationSeverity,
+        DatasetStatistics,
+        ValidationSummary,
+    )
+    __all__.extend([
+        "PreprocessingValidator",
+        "ValidationResult",
+        "ValidationIssue",
+        "ValidationSeverity",
+        "DatasetStatistics",
+        "ValidationSummary",
+    ])
+except ImportError:
+    pass
+
+
