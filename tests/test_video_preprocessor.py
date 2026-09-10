@@ -1,6 +1,6 @@
 """
 TruthLens - Unit Tests for Video Preprocessor Pipeline
-Sprint 1: Defined test cases for image/video preprocessing
+Sprint 1: Defined test cases for image/video preprocessing & timestamp alignment
 """
 
 import os
@@ -10,6 +10,7 @@ import pytest
 from backend.data.video_preprocessor import (
     ProcessedVideo,
     SamplingStrategy,
+    VideoFrameMetadata,
     VideoPreprocessor,
 )
 
@@ -58,6 +59,17 @@ class TestVideoPreprocessor:
         assert processed.frame_count >= 1
         assert processed.tensor.shape[1:] == (3, 112, 112)
 
+    def test_keyframe_sampling_strategy(self, sample_synthetic_video_path: str):
+        preprocessor = VideoPreprocessor(
+            target_size=(112, 112),
+            num_frames=4,
+            sampling_strategy=SamplingStrategy.KEYFRAME,
+            keyframe_threshold=0.05,
+        )
+        processed: ProcessedVideo = preprocessor.process(sample_synthetic_video_path)
+        assert processed.frame_count >= 1
+        assert processed.tensor.shape[1:] == (3, 112, 112)
+
     def test_all_frames_sampling_strategy(self, sample_synthetic_video_path: str):
         preprocessor = VideoPreprocessor(
             target_size=(64, 64),
@@ -82,6 +94,22 @@ class TestVideoPreprocessor:
         # 3D CNN representation: (C, T, H, W)
         c_first = processed.to_channel_first_temporal()
         assert c_first.shape == (3, 4, 64, 64)
+
+    def test_to_analysis_frames_timestamp_alignment(self, sample_synthetic_video_path: str):
+        preprocessor = VideoPreprocessor(
+            target_size=(64, 64),
+            num_frames=4,
+        )
+        processed: ProcessedVideo = preprocessor.process(sample_synthetic_video_path)
+        analysis_frames = processed.to_analysis_frames(default_trust_score=92.5)
+
+        assert len(analysis_frames) == 4
+        for frame in analysis_frames:
+            assert "timestamp" in frame
+            assert "timestampSeconds" in frame
+            assert "trustScore" in frame
+            assert frame["trustScore"] == 92.5
+            assert "frameIndex" in frame
 
     def test_nonexistent_file_raises_filenotfound(self):
         preprocessor = VideoPreprocessor()

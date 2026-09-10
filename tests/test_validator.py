@@ -1,10 +1,11 @@
 """
 TruthLens - Unit Tests for Media & Benchmark Validator
-Sprint 1: Defined test cases for data quality & manifest consistency
+Sprint 1: Defined test cases for data quality, tensor verification & manifest consistency
 """
 
 import os
 import tempfile
+import numpy as np
 import pytest
 from PIL import Image
 
@@ -16,7 +17,9 @@ from backend.data.dataset_manifest import (
     MediaType,
     Verdict,
 )
+from backend.data.image_preprocessor import NormalizationMode
 from backend.data.validator import (
+    DatasetStatistics,
     PreprocessingValidator,
     ValidationResult,
     ValidationSeverity,
@@ -26,7 +29,7 @@ from backend.data.validator import (
 
 @pytest.mark.unit
 class TestPreprocessingValidator:
-    """Test suite for media file integrity, resolution bounds, and manifest consistency."""
+    """Test suite for media file integrity, tensor validation, resolution bounds, and manifest consistency."""
 
     def test_validate_valid_image(self, sample_rgb_image: Image.Image):
         fd, tmp_img = tempfile.mkstemp(suffix=".png")
@@ -87,7 +90,6 @@ class TestPreprocessingValidator:
 
     def test_validate_manifest_consistency(self):
         manifest = DatasetManifest(name="Consistency-Test")
-        # Inconsistent sample: label 0 (authentic) but marked MANIPULATED
         inconsistent_sample = BenchmarkSample(
             id="INCON_01",
             file_path="fake_path.jpg",
@@ -104,3 +106,85 @@ class TestPreprocessingValidator:
         assert summary.overall_valid is False
         assert summary.failed_count == 1
         assert any(i.code == "LABEL_VERDICT_MISMATCH" for i in summary.results[0].issues)
+
+    def test_validate_tensor_valid(self):
+        validator = PreprocessingValidator()
+        # 3D tensor: (3, 224, 224) with values in [0.0, 1.0]
+        tensor = np.random.uniform(0.0, 1.0, (3, 224, 224)).astype(np.float32)
+        res = validator.validate_tensor(tensor, norm_mode=NormalizationMode.ZERO_TO_ONE)
+        assert res.is_valid is True
+        assert res.metrics["ndim"] == 3
+        assert res.metrics["min_val"] >= 0.0
+        assert res.metrics["max_val"] <= 1.0
+
+        # 4D batched tensor: (2, 3, 224, 224)
+        batched = np.random.uniform(0.0, 1.0, (2, 3, 224, 224)).astype(np.float32)
+        res_batch = validator.validate_tensor(batched, norm_mode=NormalizationMode.ZERO_TO_ONE)
+        assert res_batch.is_valid is True
+        assert res_batch.metrics["ndim"] == 4
+
+    def test_validate_tensor_invalid_rank_and_channel(self):
+        validator = PreprocessingValidator()
+        # 2D tensor is invalid rank
+        res_2d = validator.validate_tensor(np.zeros((224, 224)))
+        assert res_2d.is_valid is False
+        assert any(i.code == "INVALID_TENSOR_RANK" for i in res_2d.issues)
+
+        # 1-channel grayscale tensor where 3 is expected
+        res_c1 = validator.validate_tensor(np.zeros((1, 224, 224)))
+        assert res_c1.is_valid is False
+        assert any(i.code == "CHANNEL_MISMATCH" for i in res_c1.issues)
+
+    def test_validate_tensor_nan_and_inf(self):
+        validator = PreprocessingValidator()
+        arr = np.ones((3, 64, 64), dtype=np.float32)
+        arr[0, 0, 0] = np.nan
+        res = validator.validate_tensor(arr)
+        assert res.is_valid is False
+        assert any(i.code == "TENSOR_CONTAINS_NAN" for i in res.issues)
+
+        arr[0, 0, 0] = np.inf
+        res_inf = validator.validate_tensor(arr)
+        assert res_inf.is_valid is False
+        assert any(i.code == "TENSOR_CONTAINS_INF" for i in res_inf.issues)
+
+    def test_validate_tensor_range_bounds(self):
+        validator = PreprocessingValidator()
+        # Out of bounds for [0.0, 1.0]
+        out_of_bounds = np.ones((3, 32, 32), dtype=np.float32) * 2.5
+        res = validator.validate_tensor(out_of_bounds, norm_mode=NormalizationMode.ZERO_TO_ONE)
+        assert res.is_valid is False
+        assert any(i.code == "OUT_OF_BOUNDS_ZERO_TO_ONE" for i in res.issues)
+
+    def test_statistical_summary_real_vs_fake_balance(self):
+        samples = [
+            BenchmarkSample(
+                id="S1",
+                file_path="s1.jpg",
+                media_type=MediaType.IMAGE,
+                verdict=Verdict.AUTHENTIC,
+                manipulation_category=ManipulationCategory.NONE,
+                generator_source=GeneratorSource.REAL_CAMERA,
+                label=0,
+                resolution=(1920, 1080),
+            ),
+            BenchmarkSample(
+                id="S2",
+                file_path="s2.jpg",
+                media_type=MediaType.IMAGE,
+                verdict=Verdict.MANIPULATED,
+                manipulation_category=ManipulationCategory.GENERATIVE_DIFFUSION,
+                generator_source=GeneratorSource.MIDJOURNEY,
+                label=1,
+                resolution=(1024, 1024),
+            ),
+        ]
+        validator = PreprocessingValidator()
+        stats: DatasetStatistics = validator.generate_statistical_summary(samples)
+        assert stats.total_samples == 2
+        assert stats.authentic_count == 1
+        assert stats.manipulated_count == 1
+        assert stats.authentic_ratio == 0.5
+        assert stats.manipulated_ratio == 0.5
+        assert stats.resolution_spread["min_resolution"] == (1024, 1024)
+        assert stats.resolution_spread["max_resolution"] == (1920, 1080)
