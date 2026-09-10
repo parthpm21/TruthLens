@@ -22,3 +22,15 @@ async def preprocess_image(file: UploadFile = File(...)):
     Path(tmp_path).unlink(missing_ok=True)
     return {"filename": file.filename, "shape": list(tensor.shape),
             "mean": float(tensor.mean()), "std": float(tensor.std())}
+
+from .preprocessing import preprocess_video_file
+
+@router.post("/preprocess/video")
+async def preprocess_video(file: UploadFile = File(...), num_frames: int = 16):
+    with tempfile.NamedTemporaryFile(suffix=Path(file.filename).suffix, delete=False) as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
+    tensor = preprocess_video_file(tmp_path, num_frames=num_frames)
+    Path(tmp_path).unlink(missing_ok=True)
+    return {"filename": file.filename, "num_frames_extracted": int(tensor.shape[0]),
+            "shape": list(tensor.shape)}

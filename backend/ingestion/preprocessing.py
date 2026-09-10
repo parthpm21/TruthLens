@@ -33,3 +33,31 @@ def normalize_image(image: Image.Image) -> np.ndarray:
 def preprocess_image_file(path: str | Path, target_size: Tuple[int, int] = (224, 224)) -> np.ndarray:
     image = Image.open(path)
     return normalize_image(resize_image(image, target_size))
+
+
+import cv2
+
+def extract_frames(video_path: str | Path, num_frames: int = 16) -> list[np.ndarray]:
+    cap = cv2.VideoCapture(str(video_path))
+    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    if total <= 0:
+        cap.release()
+        return []
+    indices = np.linspace(0, total - 1, num=min(num_frames, total), dtype=int)
+    frames = []
+    for idx in indices:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, int(idx))
+        ok, frame = cap.read()
+        if ok:
+            frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    cap.release()
+    return frames
+
+
+def preprocess_video_file(path: str | Path, num_frames: int = 16,
+                           target_size: Tuple[int, int] = (224, 224)) -> np.ndarray:
+    tensors = [normalize_image(resize_image(Image.fromarray(f), target_size))
+               for f in extract_frames(path, num_frames)]
+    if not tensors:
+        return np.zeros((0, 3, *target_size), dtype=np.float32)
+    return np.stack(tensors, axis=0)
